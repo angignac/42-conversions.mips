@@ -18,8 +18,8 @@ main:
 
     li $a0, 1234	    # count = percent_base_10(1234)
     jal percent_base_10
-    move $t1, $v0 		
-
+    
+    move $t1, $v0	
     li $a0, '\n'	    # print_char('\n')
     li $v0, 11
     syscall
@@ -35,28 +35,41 @@ main:
 percent_base_10:
     # $v0: count
     # $a0: value
-    #c: remainder
-    #d: count
+    
+    addiu $sp, $sp, 16 
     
     li $t0, 10 
     
     while_loop:
-    	ble $a0, $zero, done 
+    	ble $a0, $zero, next 
     	div $a0, $t0
     	mfhi $a0 
+ 
     
     convert:
     	addi $a0, $a0, '0'
+    	sw $a0, ($sp)
+    	subiu $sp, $sp, 4 
+    	
+    	mflo $a0 
+    	addiu $t1, $t1, 1
+    	bge $a0, $zero, while_loop
+    
+    next:
+       addiu $sp. $sp, 4
+       
+       move $t2, $t1
     
     print_c:
-    	
+    	lw $a0, ($sp)
     	li $v0, 11
     	syscall 
+    	addiu $sp, $sp, 4 
+    	subiu $t1, $t1,1
+    	bnez $t1, print_c
     	
-    	mflo $a0
-    	addiu $t1, $t1, 1
-    	bge $a0., $zero, while_loop
+    	subiu $sp, $sp, 16 
     	
     done:
-    	move $v0,$t1
-    jr $ra
+    	move $v0,$t2	
+        jr $ra
