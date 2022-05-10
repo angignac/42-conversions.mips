@@ -26,7 +26,7 @@ main:
     move $a0, $v0
 
     move $a1, $t0
-    li $a2, 1234	    # count = percent_base_10(1234)
+    read_int ($a2)	    # count = percent_base_10(1234)
     read_int($a3)
     jal percent_unsigned_base
 
@@ -38,38 +38,65 @@ main:
     li $v0, 11
     syscall
     
-    move $a0, $t1 	    # exit(0)
-    li $v0, 11
-    syscall
-    
     print_int($t1)
     
     terminate($zero)
-    
-    li $a0, 0 
-    li $v0, 17
-    syscall 
 
-percent_unsigned_base:
+percent_signed_base:
     # $v0: count
     # $a0: buffer
     # $a1: size
     # $a2: value
     # $a3: user input
-    # $t0: holding 9
-    # $t1: counter 
+    # $t0: '-' or '+'
+    # $t2: '0'
+    # $s1: $ra
+    
+    blt $a2, $zero, neg_num
+    bgt $a2, $zero, pos_num
+    b cont
+    
+    neg_num:
+    li $t0, '-'
+    sb $t0, ($a0)
+    addi $a0, $a0, 1
+    not $a2, $a2, 1
+    b cont 
+    
+    pos_num:
+    	li $t0, '+'
+    	sb $t0, ($a0)
+    	addi $a0, $a0, 1 
+    	b cont
+    	
+    cont: 
+    	move $s1, $ra
+  	jal percent_unsigned_base
+  	move $ra, $s1
+  	li $t2, '0'
+  	beq $a2, $t2, jump_main
+  	subi $a0, $a0
+  	
+   jump_main:
+   jr $ra
+ 
+ percent_unsigned_base:
+    # $v0: count
+    # $a0: buffer
+    # $a1: size
+    # $a2: value
+    # $a3: user input
+    # $t0: holding 9 
+    # $t1: counter
     # $t2: print count
     
-    
-    addiu $sp, $sp, 16 
-    
+    addiu $sp, $sp, 16
     li $t0, 9 
+    move $t2, $zero
     
     while_loop:
-    	ble $a2, $zero, next 
-    	div $a2, $a3
-    	mfhi $a2 
- 
+    div $a2,$a3
+    mfhi $a2
     
     convert:
     	ble $a2, $t0, less
